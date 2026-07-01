@@ -19,13 +19,63 @@ Users of this software are expected to use this software responsibly while abidi
 
 ## How do I install it?
 
-**Issues regarding installation will be closed from now on, we cannot handle the amount of requests.**
+We recommend installing ReActor inside a virtual environment using Python 3.13. Follow these steps to set up and run the application:
 
-There are two types of installations: basic and gpu-powered.
+### Prerequisites
+Make sure you have `ffmpeg` and `python3.13` (or Python 3.9+) installed on your system.
 
-- **Basic:** It is more likely to work on your computer but it will also be very slow. You can follow instructions for the basic install [here](https://github.com/s0md3v/roop/wiki/1.-Installation).
+### Installation Steps
 
-- **Acceleration:** If you have a good GPU and are ready for solving any software issues you may face, you can enable GPU which is wayyy faster. To do this, first follow the basic install instructions given above and then follow GPU-specific instructions [here](https://github.com/s0md3v/roop/wiki/2.-Acceleration).
+1. **Create and Activate a Virtual Environment**
+   ```bash
+   python3.13 -m venv venv
+   source venv/bin/activate
+   ```
+
+2. **Upgrade Build Tools**
+   ```bash
+   pip install --upgrade pip
+   pip install setuptools wheel
+   ```
+
+3. **Install PyTorch and TorchVision (CPU)**
+   ```bash
+   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+   ```
+
+4. **Install Main Dependencies**
+   ```bash
+   pip install opencv-python onnx psutil customtkinter onnxruntime opennsfw2 tqdm gfpgan insightface
+   ```
+
+5. **Install Patched `basicsr` for Python 3.13 Compatibility**
+   - Download and extract the source:
+     ```bash
+     curl -LO https://files.pythonhosted.org/packages/86/41/00a6b000f222f0fa4c6d9e1d6dcc9811a374cabb8abb9d408b77de39648c/basicsr-1.4.2.tar.gz
+     tar -xf basicsr-1.4.2.tar.gz
+     ```
+   - In `basicsr-1.4.2/setup.py`, update `get_version()`:
+     ```python
+     def get_version():
+         ldict = {}
+         with open(version_file, 'r') as f:
+             exec(compile(f.read(), version_file, 'exec'), globals(), ldict)
+         return ldict['__version__']
+     ```
+   - In `basicsr-1.4.2/basicsr/data/degradations.py`, change the import at line 8 to:
+     ```python
+     from torchvision.transforms.functional import rgb_to_grayscale
+     ```
+   - Build and install `basicsr` locally:
+     ```bash
+     pip install --no-build-isolation --no-deps ./basicsr-1.4.2
+     ```
+
+6. **Run the Application**
+   ```bash
+   python3 run.py
+   ```
+
 
 ## How do I use it?
 > Note: When you run this program for the first time, it will download some models ~1Gb in size.
