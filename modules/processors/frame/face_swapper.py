@@ -1,5 +1,7 @@
 from typing import Any, List
+import os
 import cv2
+import numpy as np
 import insightface
 import threading
 
@@ -39,9 +41,50 @@ def get_face_swapper() -> Any:
 
     with THREAD_LOCK:
         if FACE_SWAPPER is None:
-            model_path = resolve_relative_path('../models/inswapper_128.onnx')
-            FACE_SWAPPER = insightface.model_zoo.get_model(model_path, providers=modules.globals.execution_providers)
+            model_paths = [
+                resolve_relative_path('../models/simswap_512.onnx'),
+                resolve_relative_path('../models/blendswap_256.onnx'),
+                resolve_relative_path('../models/inswapper_128.onnx')
+            ]
+            chosen_path = next((p for p in model_paths if os.path.exists(p)), model_paths[-1])
+            FACE_SWAPPER = insightface.model_zoo.get_model(chosen_path, providers=modules.globals.execution_providers)
     return FACE_SWAPPER
+
+
+def apply_color_transfer(target_frame: Frame, swapped_frame: Frame) -> Frame:
+    """Reinhard color transfer to match swapped face skin tone with original target image."""
+    try:
+        target_lab = cv2.cvtColor(target_frame, cv2.COLOR_BGR2LAB).astype("float32")
+        swapped_lab = cv2.cvtColor(swapped_frame, cv2.COLOR_BGR2LAB).astype("float32")
+
+        (l_mean_t, l_std_t, a_mean_t, a_std_t, b_mean_t, b_std_t) = (
+            target_lab[:, :, 0].mean(), target_lab[:, :, 0].std(),
+            target_lab[:, :, 1].mean(), target_lab[:, :, 1].std(),
+            target_lab[:, :, 2].mean(), target_lab[:, :, 2].std()
+        )
+        (l_mean_s, l_std_s, a_mean_s, a_std_s, b_mean_s, b_std_s) = (
+            swapped_lab[:, :, 0].mean(), swapped_lab[:, :, 0].std(),
+            swapped_lab[:, :, 1].mean(), swapped_lab[:, :, 1].std(),
+            swapped_lab[:, :, 2].mean(), swapped_lab[:, :, 2].std()
+        )
+
+        l = swapped_lab[:, :, 0] - l_mean_s
+        a = swapped_lab[:, :, 1] - a_mean_s
+        b = swapped_lab[:, :, 2] - b_mean_s
+
+        l = (l * (l_std_t / (l_std_s + 1e-5))) + l_mean_t
+        a = (a * (a_std_t / (a_std_s + 1e-5))) + a_mean_t
+        b = (b * (b_std_t / (b_std_s + 1e-5))) + b_mean_t
+
+        result_lab = cv2.merge([
+            np.clip(l, 0, 255),
+            np.clip(a, 0, 255),
+            np.clip(b, 0, 255)
+        ]).astype("uint8")
+
+        return cv2.cvtColor(result_lab, cv2.COLOR_LAB2BGR)
+    except Exception:
+        return swapped_frame
 
 
 def swap_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame:

@@ -55,10 +55,12 @@ def set_frame_processors_modules_from_ui(frame_processors: List[str]) -> None:
                 pass
 
 def multi_process_frame(source_path: str, temp_frame_paths: List[str], process_frames: Callable[[str, List[str], Any], None], progress: Any = None) -> None:
+    batch_size = max(1, len(temp_frame_paths) // (modules.globals.execution_threads * 4)) if modules.globals.execution_threads else 1
+    batches = [temp_frame_paths[i:i + batch_size] for i in range(0, len(temp_frame_paths), batch_size)]
     with ThreadPoolExecutor(max_workers=modules.globals.execution_threads) as executor:
         futures = []
-        for path in temp_frame_paths:
-            future = executor.submit(process_frames, source_path, [path], progress)
+        for batch in batches:
+            future = executor.submit(process_frames, source_path, batch, progress)
             futures.append(future)
         for future in futures:
             future.result()

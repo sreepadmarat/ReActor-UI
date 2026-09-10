@@ -13,12 +13,12 @@ from modules.processors.frame.core import get_frame_processors_modules
 from modules.utilities import is_image, is_video, resolve_relative_path
 
 ROOT = None
-ROOT_HEIGHT = 700
-ROOT_WIDTH = 600
+ROOT_HEIGHT = 850
+ROOT_WIDTH = 850
 
 PREVIEW = None
-PREVIEW_MAX_HEIGHT = 700
-PREVIEW_MAX_WIDTH = 1200
+PREVIEW_MAX_HEIGHT = 800
+PREVIEW_MAX_WIDTH = 1400
 
 RECENT_DIRECTORY_SOURCE = None
 RECENT_DIRECTORY_TARGET = None
@@ -50,64 +50,66 @@ def create_root(start: Callable[[], None], destroy: Callable[[], None]) -> ctk.C
     ctk.set_default_color_theme(resolve_relative_path('ui.json'))
 
     root = ctk.CTk()
+    root.geometry(f'{ROOT_WIDTH}x{ROOT_HEIGHT}')
     root.minsize(ROOT_WIDTH, ROOT_HEIGHT)
     root.title(f'{modules.metadata.name} {modules.metadata.version} {modules.metadata.edition}')
     root.configure()
     root.protocol('WM_DELETE_WINDOW', lambda: destroy())
 
-    source_label = ctk.CTkLabel(root, text=None)
-    source_label.place(relx=0.1, rely=0.1, relwidth=0.3, relheight=0.25)
+    source_label = ctk.CTkLabel(root, text=None, corner_radius=10, fg_color=('gray85', 'gray20'))
+    source_label.place(relx=0.08, rely=0.05, relwidth=0.38, relheight=0.32)
 
-    target_label = ctk.CTkLabel(root, text=None)
-    target_label.place(relx=0.6, rely=0.1, relwidth=0.3, relheight=0.25)
+    target_label = ctk.CTkLabel(root, text=None, corner_radius=10, fg_color=('gray85', 'gray20'))
+    target_label.place(relx=0.54, rely=0.05, relwidth=0.38, relheight=0.32)
 
-    source_button = ctk.CTkButton(root, text='Select a face', cursor='hand2', command=lambda: select_source_path())
-    source_button.place(relx=0.1, rely=0.4, relwidth=0.3, relheight=0.1)
+    source_button = ctk.CTkButton(root, text='Select a face', corner_radius=8, font=('Inter', 15, 'bold'), cursor='hand2', command=lambda: select_source_path())
+    source_button.place(relx=0.08, rely=0.39, relwidth=0.38, relheight=0.065)
 
-    target_button = ctk.CTkButton(root, text='Select a target', cursor='hand2', command=lambda: select_target_path())
-    target_button.place(relx=0.6, rely=0.4, relwidth=0.3, relheight=0.1)
+    target_button = ctk.CTkButton(root, text='Select a target', corner_radius=8, font=('Inter', 15, 'bold'), cursor='hand2', command=lambda: select_target_path())
+    target_button.place(relx=0.54, rely=0.39, relwidth=0.38, relheight=0.065)
 
+    # Options Frame / Toggle Grid
     keep_fps_value = ctk.BooleanVar(value=modules.globals.keep_fps)
-    keep_fps_checkbox = ctk.CTkSwitch(root, text='Keep fps', variable=keep_fps_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_fps', not modules.globals.keep_fps))
-    keep_fps_checkbox.place(relx=0.1, rely=0.6)
+    keep_fps_checkbox = ctk.CTkSwitch(root, text='Keep fps', font=('Inter', 14), variable=keep_fps_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_fps', not modules.globals.keep_fps))
+    keep_fps_checkbox.place(relx=0.12, rely=0.51)
 
     keep_frames_value = ctk.BooleanVar(value=modules.globals.keep_frames)
-    keep_frames_switch = ctk.CTkSwitch(root, text='Keep frames', variable=keep_frames_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_frames', keep_frames_value.get()))
-    keep_frames_switch.place(relx=0.1, rely=0.65)
+    keep_frames_switch = ctk.CTkSwitch(root, text='Keep frames', font=('Inter', 14), variable=keep_frames_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_frames', keep_frames_value.get()))
+    keep_frames_switch.place(relx=0.12, rely=0.58)
 
-    # for FRAME PROCESSOR ENHANCER tumbler:
     enhancer_value = ctk.BooleanVar(value=modules.globals.fp_ui['face_enhancer'])
-    enhancer_switch = ctk.CTkSwitch(root, text='Face Enhancer', variable=enhancer_value, cursor='hand2', command=lambda: update_tumbler('face_enhancer',enhancer_value.get()))
-    enhancer_switch.place(relx=0.1, rely=0.7)
+    enhancer_switch = ctk.CTkSwitch(root, text='Face Enhancer', font=('Inter', 14), variable=enhancer_value, cursor='hand2', command=lambda: update_tumbler('face_enhancer', enhancer_value.get()))
+    enhancer_switch.place(relx=0.12, rely=0.65)
 
     keep_audio_value = ctk.BooleanVar(value=modules.globals.keep_audio)
-    keep_audio_switch = ctk.CTkSwitch(root, text='Keep audio', variable=keep_audio_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_audio', keep_audio_value.get()))
-    keep_audio_switch.place(relx=0.6, rely=0.6)
+    keep_audio_switch = ctk.CTkSwitch(root, text='Keep audio', font=('Inter', 14), variable=keep_audio_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_audio', keep_audio_value.get()))
+    keep_audio_switch.place(relx=0.58, rely=0.51)
 
     many_faces_value = ctk.BooleanVar(value=modules.globals.many_faces)
-    many_faces_switch = ctk.CTkSwitch(root, text='Many faces', variable=many_faces_value, cursor='hand2', command=lambda: setattr(modules.globals, 'many_faces', many_faces_value.get()))
-    many_faces_switch.place(relx=0.6, rely=0.65)
+    many_faces_switch = ctk.CTkSwitch(root, text='Many faces', font=('Inter', 14), variable=many_faces_value, cursor='hand2', command=lambda: setattr(modules.globals, 'many_faces', many_faces_value.get()))
+    many_faces_switch.place(relx=0.58, rely=0.58)
 
     nsfw_value = ctk.BooleanVar(value=modules.globals.nsfw)
-    nsfw_switch = ctk.CTkSwitch(root, text='NSFW', variable=nsfw_value, cursor='hand2', command=lambda: setattr(modules.globals, 'nsfw', nsfw_value.get()))
-    nsfw_switch.place(relx=0.6, rely=0.7)
+    nsfw_switch = ctk.CTkSwitch(root, text='NSFW', font=('Inter', 14), variable=nsfw_value, cursor='hand2', command=lambda: setattr(modules.globals, 'nsfw', nsfw_value.get()))
+    nsfw_switch.place(relx=0.58, rely=0.65)
 
-    start_button = ctk.CTkButton(root, text='Start', cursor='hand2', command=lambda: select_output_path(start))
-    start_button.place(relx=0.15, rely=0.80, relwidth=0.2, relheight=0.05)
+    # Action Buttons
+    start_button = ctk.CTkButton(root, text='Start', corner_radius=8, font=('Inter', 15, 'bold'), cursor='hand2', command=lambda: select_output_path(start))
+    start_button.place(relx=0.08, rely=0.77, relwidth=0.26, relheight=0.065)
 
-    stop_button = ctk.CTkButton(root, text='Destroy', cursor='hand2', command=lambda: destroy())
-    stop_button.place(relx=0.4, rely=0.80, relwidth=0.2, relheight=0.05)
+    stop_button = ctk.CTkButton(root, text='Destroy', corner_radius=8, font=('Inter', 15, 'bold'), fg_color='#d9534f', hover_color='#c9302c', cursor='hand2', command=lambda: destroy())
+    stop_button.place(relx=0.37, rely=0.77, relwidth=0.26, relheight=0.065)
 
-    preview_button = ctk.CTkButton(root, text='Preview', cursor='hand2', command=lambda: toggle_preview())
-    preview_button.place(relx=0.65, rely=0.80, relwidth=0.2, relheight=0.05)
+    preview_button = ctk.CTkButton(root, text='Preview', corner_radius=8, font=('Inter', 15, 'bold'), fg_color='#337ab7', hover_color='#286090', cursor='hand2', command=lambda: toggle_preview())
+    preview_button.place(relx=0.66, rely=0.77, relwidth=0.26, relheight=0.065)
 
-    status_label = ctk.CTkLabel(root, text=None, justify='center')
-    status_label.place(relx=0.1, rely=0.9, relwidth=0.8)
+    status_label = ctk.CTkLabel(root, text=None, font=('Inter', 13), justify='center')
+    status_label.place(relx=0.1, rely=0.88, relwidth=0.8)
 
-    donate_label = ctk.CTkLabel(root, text='Gourieff GitHub', justify='center', cursor='hand2')
-    donate_label.place(relx=0.1, rely=0.95, relwidth=0.8)
+    donate_label = ctk.CTkLabel(root, text='GitHub', font=('Inter', 12), justify='center', cursor='hand2')
+    donate_label.place(relx=0.1, rely=0.94, relwidth=0.8)
     donate_label.configure(text_color=ctk.ThemeManager.theme.get('URL').get('text_color'))
-    donate_label.bind('<Button>', lambda event: webbrowser.open('https://github.com/Gourieff'))
+    donate_label.bind('<Button>', lambda event: webbrowser.open('https://github.com/sreepadmarat/ReActor-UI'))
 
     return root
 

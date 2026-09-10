@@ -27,7 +27,13 @@ def run_ffmpeg(args: List[str]) -> bool:
         subprocess.check_output(commands, stderr=subprocess.STDOUT)
         return True
     except Exception:
-        pass
+        # Fallback without hardware acceleration flag if hwaccel fails on certain OS environments
+        fallback_commands = ['ffmpeg', '-hide_banner', '-loglevel', modules.globals.log_level] + args
+        try:
+            subprocess.check_output(fallback_commands, stderr=subprocess.STDOUT)
+            return True
+        except Exception:
+            pass
     return False
 
 
@@ -40,6 +46,18 @@ def detect_fps(target_path: str) -> float:
     except Exception:
         pass
     return 30.0
+
+
+def extract_frames_stream(target_path: str):
+    """Stream raw video frames directly into memory generator (Zero-Disk I/O)."""
+    import cv2
+    cap = cv2.VideoCapture(target_path)
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        yield frame
+    cap.release()
 
 
 def extract_frames(target_path: str) -> None:

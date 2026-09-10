@@ -1,99 +1,84 @@
-# ReActor 1.0.3 Portable
-### The Fast and Simple "roop-based*" FaceSwap application with a lot of improvements and with no forced NSFW** filter (uncensored, use it on your own responsibility)
+# ReActor UI Modernized
+### Fast, high-resolution face swapping application with multi-provider hardware acceleration
 
-> *[original roop](https://github.com/s0md3v/roop) is discontinued<br>
-> **You can always toggle to SFW inside the UI
+> Extended and modernized fork of ReActor / roop with enhanced performance, modernized UI, multi-provider hardware acceleration, and dynamic high-res face detection.
 
-Take a video or photo and replace the face in it with a face of your choice. You only need one image of the desired face. No dataset, no training.
-
-You can watch some demos [here](https://drive.google.com/drive/folders/1KHv8n_rd3Lcr2v7jBq1yPSTWM554Gq8e?usp=sharing). A StableDiffusion extension is also available, [here](https://github.com/Gourieff/sd-webui-reactor).
+Take a video or photo and replace the face in it with a face of your choice. You only need one image of the desired face — no dataset or training required.
 
 ![demo-gif](docs/demo.gif)
 
-## Disclaimer
-This software is meant to be a productive contribution to the rapidly growing AI-generated media industry. It will help artists with tasks such as animating a custom character or using the character as a model for clothing etc.
+---
 
-The developers of this software are aware of its possible unethical applicaitons and are committed to take preventative measures against them. It has a built-in check which prevents the program from working on inappropriate media including but not limited to nudity, graphic content, sensitive material such as war footage etc. We will continue to develop this project in the positive direction while adhering to law and ethics.
+## 🌟 Key Features & Improvements
+* **Multi-Provider Hardware Acceleration**: Dynamic support for `CoreML` (macOS Apple Silicon), `DirectML` (AMD / Direct3D), `CUDA` / `TensorRT` (NVIDIA), `ROCm`, and `CPU`.
+* **Zero-Disk I/O In-Memory Pipe Streaming**: Option for memory-buffered video frame streams avoiding heavy temporary PNG disk writes.
+* **Modernized UI (CustomTkinter)**: Redesigned window layout (850x850), modernized toggle switches, and distinct action buttons.
+* **High-Resolution Model Fallbacks**: Dynamic model selection supporting $512\times 512$ (`simswap_512.onnx`), $256\times 256$ (`blendswap_256.onnx`), and $128\times 128$ (`inswapper_128.onnx`).
+* **Face Restoration & Enhancers**: Supports both `GFPGAN` and `CodeFormer` face enhancement models.
+* **Dynamic High-Res Face Detection**: Automatically scales `det_size` up to `(1280, 1280)` on HD/4K videos for accurate distant face tracking.
 
-Users of this software are expected to use this software responsibly while abiding the local law. If face of a real person is being used, users are suggested to get consent from the concerned person and clearly mention that it is a deepfake when posting content online. **Developers and Contributors of this software are not responsible for actions of end-users.**
+---
 
-## How do I install it?
-
-We recommend installing ReActor inside a virtual environment using Python 3.13. Follow these steps to set up and run the application:
+## 🛠 How do I install it?
 
 ### Prerequisites
-Make sure you have `ffmpeg` and `python3.13` (or Python 3.9+) installed on your system.
+Make sure you have `ffmpeg` and `python3.9`+ (up to Python 3.14) installed on your system.
 
-### Installation Steps
+### Quick Setup
 
-1. **Create and Activate a Virtual Environment**
+1. **Clone the Repository**
    ```bash
-   python3.13 -m venv venv
-   source venv/bin/activate
+   git clone https://github.com/sreepadmarat/ReActor-UI.git
+   cd ReActor-UI
    ```
 
-2. **Upgrade Build Tools**
-   ```bash
-   pip install --upgrade pip
-   pip install setuptools wheel
-   ```
-
-3. **Install PyTorch and TorchVision (CPU)**
-   ```bash
-   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-   ```
-
-4. **Install Main Dependencies**
-   ```bash
-   pip install opencv-python onnx psutil customtkinter onnxruntime opennsfw2 tqdm gfpgan insightface
-   ```
-
-5. **Install Patched `basicsr` for Python 3.13 Compatibility**
-   - Download and extract the source:
+2. **Create and Activate Virtual Environment**
+   - **Bash / Zsh**:
      ```bash
-     curl -LO https://files.pythonhosted.org/packages/86/41/00a6b000f222f0fa4c6d9e1d6dcc9811a374cabb8abb9d408b77de39648c/basicsr-1.4.2.tar.gz
-     tar -xf basicsr-1.4.2.tar.gz
+     python3 -m venv venv
+     source venv/bin/activate
      ```
-   - In `basicsr-1.4.2/setup.py`, update `get_version()`:
-     ```python
-     def get_version():
-         ldict = {}
-         with open(version_file, 'r') as f:
-             exec(compile(f.read(), version_file, 'exec'), globals(), ldict)
-         return ldict['__version__']
-     ```
-   - In `basicsr-1.4.2/basicsr/data/degradations.py`, change the import at line 8 to:
-     ```python
-     from torchvision.transforms.functional import rgb_to_grayscale
-     ```
-   - Build and install `basicsr` locally:
-     ```bash
-     pip install --no-build-isolation --no-deps ./basicsr-1.4.2
+   - **Fish Shell**:
+     ```fish
+     python3 -m venv venv
+     source venv/bin/activate.fish
      ```
 
-6. **Run the Application**
+3. **Install Dependencies**
+   ```bash
+   pip install --upgrade pip setuptools wheel
+   pip install -r requirements.txt
+   ```
+
+4. **Run the Application**
    ```bash
    python3 run.py
    ```
 
+---
 
-## How do I use it?
-> Note: When you run this program for the first time, it will download some models ~1Gb in size.
+## 🚀 Usage
 
-Executing `python run.py` command will launch this window:
-<img src="docs/gui-demo.jpg" alt="drawing" width="602"/>
+Executing `python3 run.py` will launch the modernized desktop interface:
 
-Choose a face (image with desired face) and the target image/video (image/video in which you want to replace the face) and click on `Start`. Open file explorer and navigate to the directory you select your output to be in. You will find a directory named `<video_title>` where you can see the frames being swapped in realtime. Once the processing is done, it will create the output file. That's it.
+1. Select a **Source Face** (image containing the face you want to use).
+2. Select a **Target File** (image or video in which you want to replace the face).
+3. Toggle options like **Face Enhancer**, **Keep audio**, or **Keep fps**.
+4. Click **Start** to process or **Preview** to check single-frame alignment.
 
-Additional command line arguments are given below. To learn out what they do, check [this guide](https://github.com/s0md3v/roop/wiki/Advanced-Options).
+### CLI Mode Options
+You can also run ReActor in headless CLI mode:
+```bash
+python3 run.py -s source.jpg -t target.mp4 -o output.mp4 --execution-provider directml cpu
+```
 
 ```
 options:
   -h, --help            show this help message and exit
   -s SOURCE_PATH, --source SOURCE_PATH
-                        select an source image
+                        select a source image
   -t TARGET_PATH, --target TARGET_PATH
-                        select an target image or video
+                        select a target image or video
   -o OUTPUT_PATH, --output OUTPUT_PATH
                         select output file or directory
   --frame-processor {face_swapper,face_enhancer} [{face_swapper,face_enhancer} ...]
@@ -108,17 +93,17 @@ options:
                         adjust output video quality
   --max-memory MAX_MEMORY
                         maximum amount of RAM in GB
-  --execution-provider {cpu,...} [{cpu,...} ...]
+  --execution-provider {tensorrt,cuda,coreml,directml,rocm,cpu}
                         execution provider
   --execution-threads EXECUTION_THREADS
                         number of execution threads
   -v, --version         show program's version number and exit
 ```
 
-Looking for a CLI mode? Using the -s/--source argument will make the run program in cli mode.
+---
 
-## Credits
-- [henryruhs](https://github.com/henryruhs): for being the most active contributor to the first roop project
-- [ffmpeg](https://ffmpeg.org/): for making video related operations easy
-- [deepinsight](https://github.com/deepinsight): for their [insightface](https://github.com/deepinsight/insightface) project which provided a well-made library and models.
-- and all developers behind libraries used in this project.
+## 📜 Credits
+- [Gourieff](https://github.com/Gourieff): Original ReActor project author
+- [s0md3v](https://github.com/s0md3v/roop): Author of the original roop application
+- [insightface](https://github.com/deepinsight/insightface): Facial detection and representation models
+- [ffmpeg](https://ffmpeg.org/): Multimedia framework

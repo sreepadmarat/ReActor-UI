@@ -35,17 +35,20 @@ def get_face_enhancer() -> Any:
     with THREAD_LOCK:
         if FACE_ENHANCER is None:
             model_path = resolve_relative_path('../models/GFPGANv1.4.pth')
-            # todo: set models path https://github.com/TencentARC/GFPGAN/issues/399
-            FACE_ENHANCER = gfpgan.GFPGANer(model_path=model_path, upscale=1) # type: ignore[attr-defined]
+            download_directory_path = resolve_relative_path('../models')
+            conditional_download(download_directory_path, ['https://github.com/TencentARC/GFPGAN/releases/download/v1.3.4/GFPGANv1.4.pth'])
+            FACE_ENHANCER = gfpgan.GFPGANer(model_path=model_path, upscale=1, bg_upsampler=None)
     return FACE_ENHANCER
 
 
 def enhance_face(temp_frame: Frame) -> Frame:
     with THREAD_SEMAPHORE:
-        _, _, temp_frame = get_face_enhancer().enhance(
-            temp_frame,
-            paste_back=True
-        )
+        enhancer = get_face_enhancer()
+        if hasattr(enhancer, 'enhance'):
+            _, _, temp_frame = enhancer.enhance(temp_frame, paste_back=True)
+        elif hasattr(enhancer, 'predict'):
+            temp_frame = enhancer.predict(temp_frame)
+    return temp_frame
     return temp_frame
 
 

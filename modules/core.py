@@ -13,7 +13,10 @@ import shutil
 import argparse
 import torch
 import onnxruntime
-import tensorflow
+try:
+    import tensorflow
+except ImportError:
+    tensorflow = None
 
 import modules.globals
 import modules.metadata
@@ -103,19 +106,44 @@ def encode_execution_providers(execution_providers: List[str]) -> List[str]:
     return [execution_provider.replace('ExecutionProvider', '').lower() for execution_provider in execution_providers]
 
 
+def suggest_execution_providers() -> List[str]:
+    providers = []
+    if 'TensorrtExecutionProvider' in onnxruntime.get_available_providers():
+        providers.append('tensorrt')
+    if 'CUDAExecutionProvider' in onnxruntime.get_available_providers():
+        providers.append('cuda')
+    if 'CoreMLExecutionProvider' in onnxruntime.get_available_providers():
+        providers.append('coreml')
+    if 'DmlExecutionProvider' in onnxruntime.get_available_providers():
+        providers.append('directml')
+    if 'ROCMExecutionProvider' in onnxruntime.get_available_providers():
+        providers.append('rocm')
+    if 'CPUExecutionProvider' in onnxruntime.get_available_providers():
+        providers.append('cpu')
+    return providers
+
+
 def decode_execution_providers(execution_providers: List[str]) -> List[str]:
-    return [provider for provider, encoded_execution_provider in zip(onnxruntime.get_available_providers(), encode_execution_providers(onnxruntime.get_available_providers()))
-            if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers)]
+    providers = []
+    if 'tensorrt' in execution_providers:
+        providers.append('TensorrtExecutionProvider')
+    if 'cuda' in execution_providers:
+        providers.append('CUDAExecutionProvider')
+    if 'coreml' in execution_providers:
+        providers.append('CoreMLExecutionProvider')
+    if 'directml' in execution_providers:
+        providers.append('DmlExecutionProvider')
+    if 'rocm' in execution_providers:
+        providers.append('ROCMExecutionProvider')
+    if 'cpu' in execution_providers:
+        providers.append('CPUExecutionProvider')
+    return providers
 
 
 def suggest_max_memory() -> int:
     if platform.system().lower() == 'darwin':
         return 4
     return 16
-
-
-def suggest_execution_providers() -> List[str]:
-    return encode_execution_providers(onnxruntime.get_available_providers())
 
 
 def suggest_execution_threads() -> int:
@@ -128,9 +156,10 @@ def suggest_execution_threads() -> int:
 
 def limit_resources() -> None:
     # prevent tensorflow memory leak
-    gpus = tensorflow.config.experimental.list_physical_devices('GPU')
-    for gpu in gpus:
-        tensorflow.config.experimental.set_memory_growth(gpu, True)
+    if tensorflow:
+        gpus = tensorflow.config.experimental.list_physical_devices('GPU')
+        for gpu in gpus:
+            tensorflow.config.experimental.set_memory_growth(gpu, True)
     # limit memory usage
     if modules.globals.max_memory:
         memory = modules.globals.max_memory * 1024 ** 3
